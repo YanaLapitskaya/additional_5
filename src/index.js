@@ -1,51 +1,29 @@
-module.exports =
- function check(str, bracketsConfig) {
+module.exports = function check(str, bracketsConfig) {
   	let string=str.split('');
   	return findClose(string,bracketsConfig);
 }
 
-function findClose(array,config){
-	for(let i=0;i<array.length;i++){
-		let lookFor=findRule(array[i],config);
-		let isFound=false;
-		let count=1;
-		if(!lookFor) return false;
-
-//for cases, when open and close symbols the same: || 11 and etc
-		if(lookFor[0]===lookFor[1]){
-			let lastInd;
-			try{
-			lastInd=array.slice(i+1).lastIndexOf(lookFor[0])+1+i;
-			}
-			catch(err){
-				return false;
-			}
-			isFound=true;
-			if(((i+1)<=(lastInd-1))&&!findClose(array.slice(i+1,lastInd),config)) return false;
-				break;
+function findClose(ar,config){
+	let stack=[];
+	for(let i=0;i<ar.length;i++){
+		let rule=findRule(ar[i],config);
+		if(rule[0]===rule[1]){
+			if((stack.length===0)||(stack[stack.length-1]!==rule[0])) stack.push(ar[i]);
+			else stack.pop();
 		}
-
-//for cases, when open and close symbols differ: {} [] and etc
-		for(let k=i+1;k<array.length;k++){
-			if(array[k]===lookFor[0]) count++;
-			if(array[k]===lookFor[1]) count--;
-			if((array[k]===lookFor[1])&&(count===0)){
-				i=k;
-				isFound=true;
-				if((i+1)<=(k-1))findClose(array.slice(i+1,k));
-				break;
-			}
+		else {
+			if(ar[i]===rule[0]) stack.push(ar[i]);
+			else if((ar[i]===rule[1])&&(stack[stack.length-1]===rule[0])) stack.pop();
+			else if((ar[i]===rule[1])&&(stack[stack.length-1]!==rule[0])) stack.push(ar[i]);
 		}
-		if(!isFound) return false;
 	}
-	return true;
+	return stack.length===0?true:false;
 }
 
 function findRule(el,config){
 	for(let rule of config){
-		if(el===rule[0])
+		if((el===rule[0])||(el===rule[1]))
 			return rule;
 	}
 	return false;
-
 }
